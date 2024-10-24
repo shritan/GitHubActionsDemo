@@ -1,0 +1,19 @@
+name: Manual Trigger Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Enter your name"
+        required: true
+      age:
+        description: "Enter your age"
+        required: false
+        default: "25"
+
+jobs:
+  say_hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print name and age
+        run: echo "Hello, my name is ${{ github.event.inputs.name }} and I am ${{ github.event.inputs.age }} years old."
