@@ -1,0 +1,14 @@
+name: Caller Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  call_workflow:
+    uses: .github/workflowsworkflow_call.yml
+    with:
+      name: "John"
+    secrets:
+      my_secret: ${{ secrets.MY_SECRET_KEY }}
