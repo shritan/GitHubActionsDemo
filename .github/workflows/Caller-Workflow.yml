@@ -7,7 +7,7 @@ on:
 
 jobs:
   call_workflow:
-    uses: .github/workflowsworkflow_call.yml
+    uses: workflowsworkflow_call.yml
     with:
       name: "John"
     secrets:
