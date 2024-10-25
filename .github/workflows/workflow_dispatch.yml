@@ -30,15 +30,16 @@ jobs:
         run: |
           echo "Environment: ${{ github.event.inputs.environment }}"
           echo "Region: ${{ github.event.inputs.region }}"
-
+      - name: List files in the directory
+        run: ls -R
+        
       - name: Setup - Fetch ${{ github.event.inputs.environment }} Configs
         id: config-env
         uses: ActionsTools/read-json-action@main
         with:
           file_path: "config-terraform.json"
           prop_path: ${{ github.event.inputs.environment }}   
-      - name: List files in the directory
-        run: ls -R
+      
       - name: Setup - Variables
         id: variables
         run: |
