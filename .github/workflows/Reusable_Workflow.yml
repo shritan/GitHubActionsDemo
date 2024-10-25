@@ -1,6 +1,4 @@
-name: Reusable Workflow
-
-on:
+'on':
   workflow_call:
     inputs:
       name:
@@ -9,10 +7,12 @@ on:
     secrets:
       my_secret:
         required: true
-
 jobs:
-  print_message:
+  setup:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Print input and secret
         run: |
