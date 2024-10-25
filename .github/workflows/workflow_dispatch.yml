@@ -1,8 +1,8 @@
 name: Manual Trigger Workflow
-'on':
+
+on:
   workflow_dispatch:
     inputs:
-     
       environment:
         description: 'Environment'
         required: true
@@ -21,29 +21,30 @@ name: Manual Trigger Workflow
           - 'eastus'
           - 'westus'
         default: 'eastus'
+
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Print name and age
-        run: >-
-          echo "Hello, my name is ${{ github.event.inputs.name }} and I am ${{
-          github.event.inputs.age }} years old."
-      
-      - name: Setup - Fetch ${{ inputs.environment }} Configs
+      - name: Print inputs
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Region: ${{ github.event.inputs.region }}"
+
+      - name: Setup - Fetch ${{ github.event.inputs.environment }} Configs
         id: config-env
         uses: ActionsTools/read-json-action@main
         with:
           file_path: "./config-terraform.json"
-          prop_path: ${{ inputs.environment }}   
-      
+          prop_path: ${{ github.event.inputs.environment }}   
+
       - name: Setup - Variables
         id: variables
         run: |
-          if [[ ${{ inputs.region == 'eastus' }} == true ]]; then
+          if [[ "${{ github.event.inputs.region }}" == "eastus" ]]; then
             echo "rg=${{ steps.config-env.outputs.RG_EASTUS }}" >> $GITHUB_OUTPUT
             echo "lap=${{ steps.config-env.outputs.LAP_EASTUS }}" >> $GITHUB_OUTPUT
-          elif [[ ${{ inputs.region  == 'westus' }} == true ]]; then
+          elif [[ "${{ github.event.inputs.region }}" == "westus" ]]; then
             echo "rg=${{ steps.config-env.outputs.RG_WESTUS }}" >> $GITHUB_OUTPUT
             echo "lap=${{ steps.config-env.outputs.LAP_WESTUS }}" >> $GITHUB_OUTPUT
           fi
@@ -58,7 +59,7 @@ jobs:
             echo "environmentApproval=Production Approve" >> $GITHUB_OUTPUT
           fi
 
-          echo "scriptPath=${{ steps.config-common.outputs.SCRIPTS_PATH }}" >> $GITHUB_OUTPUT
+          echo "scriptPath=${{ steps.config-env.outputs.SCRIPTS_PATH }}" >> $GITHUB_OUTPUT
 
       - name: Print - Variables
         run: |
@@ -66,5 +67,4 @@ jobs:
           echo "lap: ${{ steps.variables.outputs.lap }}"
           echo "Env: ${{ steps.variables.outputs.environmentApproval }}"
           echo "scriptPath: ${{ steps.variables.outputs.scriptPath }}"
-          echo "Start Time: ${{ steps.cherwellinit.outputs.date }}"
-          echo "Inputs: ${{ toJSON(inputs) }}"
+          echo "Inputs: ${{ toJSON(github.event.inputs) }}"
