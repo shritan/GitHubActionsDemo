@@ -1,0 +1,110 @@
+name: Azure Upload Lap-std Workflows
+run-name: ${{ github.workflow }}
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: false
+        type: string
+        default: ''
+
+      resourceGroup:
+        required: true
+        type: string
+      logicAppStd:
+        required: true
+        type: string
+      pathScripts:
+        required: true
+        type: string
+
+    secrets:
+      ARM_CLIENT_ID:
+        required: true
+      ARM_CLIENT_SECRET:
+        required: true
+      ARM_SUBSCRIPTION_ID:
+        required: true
+      ARM_TENANT_ID:
+        required: true
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Print - Inputs
+        run: |
+          echo "Global Workflow Inputs: ${{ toJSON(github.event.inputs) }}"
+          echo "Local Workflow Inputs: ${{ toJSON(inputs) }}"
+
+  zip-and-upload:
+    needs: setup
+    name: Execute
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Setup - Checkout
+        uses: actions/checkout@v4
+
+      - name: az login
+        run: |
+          az login --service-principal -u "${{ secrets.ARM_CLIENT_ID }}" -p "${{ secrets.ARM_CLIENT_SECRET }}"  --tenant "${{ secrets.ARM_TENANT_ID }}"
+          az account set --subscription "${{ secrets.ARM_SUBSCRIPTION_ID }}"     
+
+      - name: Easy Zip Files
+        uses: vimtor/action-zip@v1.1
+        with:
+          dest: '${{ github.run_id }}.zip'
+          recursive: true
+          files: '${{ inputs.pathScripts }}/.'
+
+      # - name: Deploy
+      #   run:  |
+      #     az extension add --yes --source "https://aka.ms/logicapp-latest-py2.py3-none-any.whl" --debug
+      #     echo "installed extension."
+          
+      #     az logicapp deployment source config-zip -n ${{ inputs.logicAppStd }} -g ${{ inputs.resourceGroup }} --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }} --src ${{ github.run_id }}.zip
+      #     echo "Deployment Completed."
+
+      # - name: Get Publish Profile
+      #   run:  |
+      #     Get-AzWebAppPublishingProfile -ResourceGroupName ${{ inputs.resourceGroup }} -Name ${{ inputs.logicAppStd }} -Format "Ftp" -OutputFile "publishProfile.publishsettings"
+      #     echo "Deployment Completed."
+
+      # - name: Upload Publish Profile
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: PublishProfileUpload
+      #     path: publishProfile.publishsettings
+      #     retention-days: 5
+
+      - name: Get Publish Profile
+        id: getPublishProfile
+        run: |
+          PUBLISH_PROFILE=$(az webapp deployment list-publishing-profiles \
+            -g ${{ inputs.resourceGroup }} \
+            -n ${{ inputs.logicAppStd }} --xml)
+          if [ -z "$PUBLISH_PROFILE" ]; then
+            echo "\$PUBLISH_PROFILE is empty"
+            echo "::error file={name},line={line},endLine={endLine},title={title}::{message}"
+            exit 1
+          fi 
+          echo "PUBLISH_PROFILE=$PUBLISH_PROFILE" >> $GITHUB_ENV
+        
+      - name: Deploy LAP Workflow
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: ${{ inputs.logicAppStd }}
+          package: '${{ github.run_id }}.zip'
+          publish-profile: ${{ steps.getPublishProfile.outputs.PUBLISH_PROFILE }}
+          respect-pom-xml: true  
+
+      - name: az logout
+        run: |
+          az logout
