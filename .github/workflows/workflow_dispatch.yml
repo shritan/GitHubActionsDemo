@@ -35,3 +35,35 @@ jobs:
         run: >-
           echo "Hello, my name is ${{ github.event.inputs.name }} and I am ${{
           github.event.inputs.age }} years old."
+          
+      - name: Setup - Variables
+        id: variables
+        run: |
+          if [[ ${{ inputs.region == 'eastus' }} == true ]]; then
+            echo "rg=${{ steps.config-env.outputs.RG_EASTUS }}" >> $GITHUB_OUTPUT
+            echo "lap=${{ steps.config-env.outputs.LAP_EASTUS }}" >> $GITHUB_OUTPUT
+          elif [[ ${{ inputs.region  == 'westus' }} == true ]]; then
+            echo "rg=${{ steps.config-env.outputs.RG_WESTUS }}" >> $GITHUB_OUTPUT
+            echo "lap=${{ steps.config-env.outputs.LAP_WESTUS }}" >> $GITHUB_OUTPUT
+          fi
+
+          if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
+            echo "environmentApproval=Development Approve" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.environment }}" == "test" ]]; then
+            echo "environmentApproval=Test Approve" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.environment }}" == "stage" ]]; then
+            echo "environmentApproval=Stage Approve" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.environment }}" == "prod" ]]; then
+            echo "environmentApproval=Production Approve" >> $GITHUB_OUTPUT
+          fi
+
+          echo "scriptPath=${{ steps.config-common.outputs.SCRIPTS_PATH }}" >> $GITHUB_OUTPUT
+
+      - name: Print - Variables
+        run: |
+          echo "rg: ${{ steps.variables.outputs.rg }}"
+          echo "lap: ${{ steps.variables.outputs.lap }}"
+          echo "Env: ${{ steps.variables.outputs.environmentApproval }}"
+          echo "scriptPath: ${{ steps.variables.outputs.scriptPath }}"
+          echo "Start Time: ${{ steps.cherwellinit.outputs.date }}"
+          echo "Inputs: ${{ toJSON(inputs) }}"
