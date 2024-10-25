@@ -24,12 +24,23 @@ on:
 
 jobs:
   setup:
+    name: Setup
     runs-on: ubuntu-latest
+    defaults :
+      run:
+        shell: bash
+    outputs:
+      rg:  ${{ steps.variables.outputs.rg }}
+      lap: ${{ steps.variables.outputs.lap }}
+      scriptPath: ${{ steps.variables.outputs.scriptPath }}
+      startDate: ${{ steps.cherwellinit.outputs.date }}
+      environApproval: ${{ steps.variables.outputs.environmentApproval }}
     steps:
-      - name: Print inputs
+      - name: Print - Inputs
         run: |
-          echo "Environment: ${{ github.event.inputs.environment }}"
-          echo "Region: ${{ github.event.inputs.region }}"
+          echo "Global Workflow Inputs: ${{ toJSON(github.event.inputs) }}"
+          echo "Local Workflow Inputs: ${{ toJSON(inputs) }}"
+          
       - name: List files in the directory
         run: ls -R
         
