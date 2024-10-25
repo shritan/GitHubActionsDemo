@@ -2,13 +2,7 @@ name: Manual Trigger Workflow
 'on':
   workflow_dispatch:
     inputs:
-      name:
-        description: Enter your name
-        required: true
-      age:
-        description: Enter your age
-        required: false
-        default: '25'
+     
       environment:
         description: 'Environment'
         required: true
@@ -18,7 +12,7 @@ name: Manual Trigger Workflow
           - 'test'
           - 'stage'
           - 'prod'
-        default: 'dev'
+        default: 'test'
       region:
         description: 'Region'
         required: true
