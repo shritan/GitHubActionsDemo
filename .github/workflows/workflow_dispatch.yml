@@ -20,6 +20,7 @@ name: Manual Trigger Workflow
           - eastus
           - westus
         default: eastus
+
 jobs:
   setup:
     name: Setup
@@ -28,29 +29,33 @@ jobs:
       run:
         shell: bash
     outputs:
-      rg: '${{ steps.variables.outputs.rg }}'
-      lap: '${{ steps.variables.outputs.lap }}'
-      scriptPath: '${{ steps.variables.outputs.scriptPath }}'
-      startDate: '${{ steps.cherwellinit.outputs.date }}'
-      environApproval: '${{ steps.variables.outputs.environmentApproval }}'
+      rg: ${{ steps.variables.outputs.rg }}
+      lap: ${{ steps.variables.outputs.lap }}
+      scriptPath: ${{ steps.variables.outputs.scriptPath }}
+      startDate: ${{ steps.cherwellinit.outputs.date }}
+      environApproval: ${{ steps.variables.outputs.environmentApproval }}
     steps:
       - name: Print - Inputs
         run: |
           echo "Global Workflow Inputs: ${{ toJSON(github.event.inputs) }}"
           echo "Local Workflow Inputs: ${{ toJSON(inputs) }}"
+
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: List files in the directory
         run: ls -R
-      - name: 'Setup - Fetch ${{ github.event.inputs.environment }} Configs'
+
+      - name: Setup - Fetch ${{ github.event.inputs.environment }} Configs
         id: config-env
         uses: ActionsTools/read-json-action@main
         with:
           file_path: config-terraform.json
-          prop_path: '${{ github.event.inputs.environment }}'
+          prop_path: ${{ github.event.inputs.environment }}
+
       - name: Setup - Variables
         id: variables
-        run: >
+        run: |
           if [[ "${{ github.event.inputs.region }}" == "eastus" ]]; then
             echo "rg=${{ steps.config-env.outputs.RG_EASTUS }}" >> $GITHUB_OUTPUT
             echo "lap=${{ steps.config-env.outputs.LAP_EASTUS }}" >> $GITHUB_OUTPUT
@@ -58,7 +63,6 @@ jobs:
             echo "rg=${{ steps.config-env.outputs.RG_WESTUS }}" >> $GITHUB_OUTPUT
             echo "lap=${{ steps.config-env.outputs.LAP_WESTUS }}" >> $GITHUB_OUTPUT
           fi
-
 
           if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
             echo "environmentApproval=Development Approve" >> $GITHUB_OUTPUT
@@ -70,9 +74,8 @@ jobs:
             echo "environmentApproval=Production Approve" >> $GITHUB_OUTPUT
           fi
 
+          echo "scriptPath=${{ steps.config-env.outputs.SCRIPTS_PATH }}" >> $GITHUB_OUTPUT
 
-          echo "scriptPath=${{ steps.config-env.outputs.SCRIPTS_PATH }}" >>
-          $GITHUB_OUTPUT
       - name: Print - Variables
         run: |
           echo "rg: ${{ steps.variables.outputs.rg }}"
@@ -81,64 +84,50 @@ jobs:
           echo "scriptPath: ${{ steps.variables.outputs.scriptPath }}"
           echo "Inputs: ${{ toJSON(github.event.inputs) }}"
 
-trigger-azure-upload-lapstd-workflow:
-  name: Deploy Workflows
-  uses: >-
-    .github/workflows/azure-upload-lapstd-workflow.yml@main
-  needs:
-    - setup
-  if: always() && !failure()
-  with:
-    environment: '${{ needs.setup.outputs.environApproval }}'
-    resourceGroup: '${{ needs.setup.outputs.rg }}'
-    logicAppStd: '${{ needs.setup.outputs.lap }}'
-    pathScripts: '${{ needs.setup.outputs.scriptPath }}'
-  secrets:
-    ARM_SUBSCRIPTION_ID: '${{ secrets.ARM_SUBSCRIPTION_ID }}'
-    ARM_CLIENT_ID: '${{ secrets.ARM_CLIENT_ID }}'
-    ARM_CLIENT_SECRET: '${{ secrets.ARM_CLIENT_SECRET }}'
-    ARM_TENANT_ID: '${{ secrets.ARM_TENANT_ID }}'
+  trigger-azure-upload-lapstd-workflow:
+    name: Deploy Workflows
+    needs: setup
+    uses: .github/workflows/azure-upload-lapstd-workflow.yml@main
+    with:
+      environment: ${{ needs.setup.outputs.environApproval }}
+      resourceGroup: ${{ needs.setup.outputs.rg }}
+      logicAppStd: ${{ needs.setup.outputs.lap }}
+      pathScripts: ${{ needs.setup.outputs.scriptPath }}
+    secrets:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
-post:
-  name: Post
-  needs:
-    - setup
-    - trigger-azure-upload-lapstd-workflow
-  runs-on: ubuntu-latest
-  if: >-
-    ${{ contains(needs. trigger-azure-upload-lapstd-workflow.result, 'success')
-    }}
-  defaults:
-    run:
-      shell: bash
-  outputs:
-    endDate: '${{ steps.variables.outputs.date }}'
-    version: '${{ steps.variables.outputs.version }}'
-    branch: '${{ steps.variables.outputs.branch }}'
-  steps:
-    - name: Setup - Variables
-      id: variables
-      run: >
-        if [[ "${{ inputs.environment }}" == *"prod"* || "${{ inputs.environment
-        }}" == *"stage"* ]]
+  post:
+    name: Post
+    needs: [setup, trigger-azure-upload-lapstd-workflow]
+    runs-on: ubuntu-latest
+    if: ${{ contains(needs['trigger-azure-upload-lapstd-workflow'].result, 'success') }}
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      endDate: ${{ steps.variables.outputs.date }}
+      version: ${{ steps.variables.outputs.version }}
+      branch: ${{ steps.variables.outputs.branch }}
+    steps:
+      - name: Setup - Variables
+        id: variables
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" == *"prod"* || "${{ github.event.inputs.environment }}" == *"stage"* ]]; then
+            echo "date=$(date --date='62 seconds' +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+            echo "version=v${GITHUB_REF##*/*-}" >> $GITHUB_OUTPUT
+            echo "branch=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+          fi
 
-        then
-          echo "date=$(date --date='62 seconds' +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-          echo version=v${GITHUB_REF##*/*-} >> $GITHUB_OUTPUT
-          echo branch=${GITHUB_REF##*/} >> $GITHUB_OUTPUT
-        fi
-    - name: Print - Variables
-      run: >
-        if [[ "${{ inputs.environment }}" == *"prod"* || "${{ inputs.environment
-        }}" == *"stage"* ]]
+      - name: Print - Variables
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" == *"prod"* || "${{ github.event.inputs.environment }}" == *"stage"* ]]; then
+            echo "End Time: ${{ steps.variables.outputs.date }}"
+            echo "Branch Version: ${{ steps.variables.outputs.version }}"
+            echo "Branch Name: ${{ steps.variables.outputs.branch }}"
+          fi
 
-        then
-          echo "End Time: ${{ steps.variables.outputs.date }}"
-          echo "Branch Version: ${{ steps.variables.outputs.version }}"
-          echo "Branch Name: ${{ steps.variables.outputs.branch }}"
-        fi
-
-
-        echo "Inputs: ${{ toJSON(inputs) }}"
-
-        echo "Github Ref: ${GITHUB_REF}"
+          echo "Inputs: ${{ toJSON(github.event.inputs) }}"
+          echo "Github Ref: ${GITHUB_REF}"
