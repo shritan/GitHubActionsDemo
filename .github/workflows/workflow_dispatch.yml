@@ -40,7 +40,7 @@ jobs:
         id: config-env
         uses: ActionsTools/read-json-action@main
         with:
-          file_path: ".github/workflows/config-terraform.json"
+          file_path: "./config-terraform.json"
           prop_path: ${{ inputs.environment }}   
       
       - name: Setup - Variables
