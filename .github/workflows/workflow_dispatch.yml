@@ -9,6 +9,24 @@ name: Manual Trigger Workflow
         description: Enter your age
         required: false
         default: '25'
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - 'dev'
+          - 'test'
+          - 'stage'
+          - 'prod'
+        default: 'dev'
+      region:
+        description: 'Region'
+        required: true
+        type: choice
+        options:
+          - 'eastus'
+          - 'westus'
+        default: 'eastus'
 jobs:
   say_hello:
     runs-on: ubuntu-latest
