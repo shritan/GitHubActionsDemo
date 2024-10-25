@@ -28,14 +28,21 @@ name: Manual Trigger Workflow
           - 'westus'
         default: 'eastus'
 jobs:
-  say_hello:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - name: Print name and age
         run: >-
           echo "Hello, my name is ${{ github.event.inputs.name }} and I am ${{
           github.event.inputs.age }} years old."
-          
+      
+      - name: Setup - Fetch ${{ inputs.environment }} Configs
+        id: config-env
+        uses: ActionsTools/read-json-action@main
+        with:
+          file_path: ".github/workflows/config-terraform.json"
+          prop_path: ${{ inputs.environment }}   
+      
       - name: Setup - Variables
         id: variables
         run: |
