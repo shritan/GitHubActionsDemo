@@ -1,1 +1,40 @@
+{
+  "common": {
+    "APP": "ecs",
 
+    "TERRAFORM_VERSION" : "1.7.0",
+    "SCRIPTS_PATH": "scripts/ecs-lap",
+    
+    "AZURE_LOGIC_APP_STD_TAG": "lap-std",
+    "AZURE_RESOURCE_GROUP_TAG": "rg",
+    "AZURE_STORAGE_ACCOUNT_TAG": "sa",
+    "AZURE_RESOURCE_SCHEMA": "aot-<env>-<region>-ecs-<tag>"
+  },
+  "dev": {
+    "RG_EASTUS": "com-aot-one-dev-eastus-rg",
+    "SA_EASTUS": "aotdzeausecssa",
+    "LAP_EASTUS": "aot-d-zeaus-ecs-lap-std",
+    "ENV": "d"
+  },
+  "test": {
+    "RG_EASTUS": "com-aot-one-test-eastus-rg",
+    "RG_WESTUS": "com-aot-one-test-westus-rg",
+    "SA_EASTUS": "aottzeausecssa",
+    "SA_WESTUS": "aottzweusecssa",
+    "LAP_EASTUS": "aot-t-zeaus-ecs-lap-std",
+    "LAP_WESTUS": "aot-t-zweus-ecs-lap-std",
+    "ENV": "t"
+  },
+  "stage": {
+    "ENV": "s"
+  },
+  "prod": {
+    "RG_EASTUS": "com-aot-one-prod-eastus-rg",
+    "RG_WESTUS": "com-aot-one-prod-westus-rg",
+    "SA_EASTUS": "aotpzeausecssa",
+    "SA_WESTUS": "aotpzweusecssa",
+    "LAP_EASTUS": "aot-p-zeaus-ecs-lap-std",
+    "LAP_WESTUS": "aot-p-zweus-ecs-lap-std",
+    "ENV": "p"
+  }
+}
