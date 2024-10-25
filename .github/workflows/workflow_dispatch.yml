@@ -87,7 +87,7 @@ jobs:
   trigger-azure-upload-lapstd-workflow:
     name: Deploy Workflows
     needs: setup
-    uses: .github/workflows/azure-upload-lapstd-workflow.yml@main
+    uses: ./.github/workflows/azure-upload-lapstd-workflow.yml
     with:
       environment: ${{ needs.setup.outputs.environApproval }}
       resourceGroup: ${{ needs.setup.outputs.rg }}
