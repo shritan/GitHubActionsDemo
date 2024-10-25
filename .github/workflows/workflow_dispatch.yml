@@ -44,14 +44,14 @@ jobs:
       - name: List files in the directory
         run: ls -R
       
-      - name: List specific directory (if file in subdirectory)
-        run: ls -R ./configs  # Adjust this path based on file location 
+      #- name: List specific directory (if file in subdirectory)
+       # run: ls -R ./configs  # Adjust this path based on file location 
       
       - name: Setup - Fetch ${{ github.event.inputs.environment }} Configs
         id: config-env
         uses: ActionsTools/read-json-action@main
         with:
-          file_path: "config-terraform.json"
+          file_path: "./config-terraform.json"
           prop_path: ${{ github.event.inputs.environment }}   
       
       - name: Setup - Variables
