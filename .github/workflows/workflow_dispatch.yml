@@ -115,7 +115,7 @@ jobs:
       - name: Setup - Variables
         id: variables
         run: |
-          if [[ "${{ github.event.inputs.environment }}" == *"prod"* || "${{ github.event.inputs.environment }}" == *"stage"* ]]; then
+          if [[ "${{ github.event.inputs.environment }}" == *"test"* || "${{ github.event.inputs.environment }}" == *"stage"* ]]; then
             echo "date=$(date --date='62 seconds' +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
             echo "version=v${GITHUB_REF##*/*-}" >> $GITHUB_OUTPUT
             echo "branch=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
@@ -123,7 +123,7 @@ jobs:
 
       - name: Print - Variables
         run: |
-          if [[ "${{ github.event.inputs.environment }}" == *"prod"* || "${{ github.event.inputs.environment }}" == *"stage"* ]]; then
+          if [[ "${{ github.event.inputs.environment }}" == *"test"* || "${{ github.event.inputs.environment }}" == *"stage"* ]]; then
             echo "End Time: ${{ steps.variables.outputs.date }}"
             echo "Branch Version: ${{ steps.variables.outputs.version }}"
             echo "Branch Name: ${{ steps.variables.outputs.branch }}"
