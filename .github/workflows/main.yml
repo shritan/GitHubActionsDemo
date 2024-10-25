@@ -1,0 +1,32 @@
+name: Access File Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  read_file_job:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository to access files
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Verify the file is present by listing files in the directory
+      - name: List files in repository
+        run: ls -R
+
+      # Read and print contents of the file
+      - name: Read config-terraform.json
+        id: read-file
+        run: cat config-terraform.json
+
+      # Optional: Store file content in output variable
+      - name: Store file content in output
+        id: file-content
+        run: |
+          FILE_CONTENT=$(cat config-terraform.json)
+          echo "content=$FILE_CONTENT" >> $GITHUB_ENV
+
+      # Use the stored content in a later step
+    #  - name: Print stored content
+       # run: echo "File content is: ${{ env.content }}"
